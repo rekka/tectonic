@@ -203,6 +203,7 @@ fn main() {
     }
 
     ccfg.file("tectonic/bibtex.c")
+        .flag("-fno-omit-frame-pointer")
         .file("tectonic/core-bridge.c")
         .file("tectonic/core-memory.c")
         .file("tectonic/dpx-agl.c")
@@ -336,6 +337,7 @@ fn main() {
     cppcfg
         .cpp(true)
         .flag("-Wall")
+        .flag("-fno-omit-frame-pointer")
         .file("tectonic/teckit-Engine.cpp")
         .file("tectonic/xetex-XeTeXFontInst.cpp")
         .file("tectonic/xetex-XeTeXFontMgr.cpp")

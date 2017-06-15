@@ -75,3 +75,6 @@ headers = "0.2"
 hyper = "0.12"
 tempfile = "^3.1"
 tokio = "0.1.22"
+
+[profile.release]
+debug = true
