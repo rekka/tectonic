@@ -18,7 +18,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use crate::digest::DigestData;
+use crate::digest::FastDigestData;
 use crate::engines::IoEventBackend;
 use crate::errors::{ErrorKind, Result, ResultExt};
 use crate::io::{Bundle, InputOrigin, IoProvider, IoSetup, IoSetupBuilder, OpenResult};
@@ -68,11 +68,11 @@ pub struct FileSummary {
     /// There's some chance that this will be `None` even if the file was read. Tectonic makes an
     /// effort to compute the digest as the data is being read from the file, but this can fail if
     /// tex decides to seek in the file as it is being written.
-    pub read_digest: Option<DigestData>,
+    pub read_digest: Option<FastDigestData>,
 
     /// If this file was written, this is the digest of its contents at the time it was last
     /// written.
-    pub write_digest: Option<DigestData>,
+    pub write_digest: Option<FastDigestData>,
     got_written_to_disk: bool,
 }
 
@@ -132,7 +132,7 @@ impl IoEventBackend for IoEvents {
         );
     }
 
-    fn output_closed(&mut self, name: OsString, digest: DigestData) {
+    fn output_closed(&mut self, name: OsString, digest: FastDigestData) {
         let summ = self
             .0
             .get_mut(&name)
@@ -159,7 +159,7 @@ impl IoEventBackend for IoEvents {
         // read again later, the `None` will be overwritten; but what matters
         // is the contents of the file the very first time it was read.
         let mut fs = FileSummary::new(AccessPattern::Read, InputOrigin::NotInput);
-        fs.read_digest = Some(DigestData::of_nothing());
+        fs.read_digest = Some(FastDigestData::of_nothing());
         self.0.insert(name.to_os_string(), fs);
     }
 
@@ -180,7 +180,7 @@ impl IoEventBackend for IoEvents {
 
     //fn primary_input_opened(&mut self, _origin: InputOrigin) {}
 
-    fn input_closed(&mut self, name: OsString, digest: Option<DigestData>) {
+    fn input_closed(&mut self, name: OsString, digest: Option<FastDigestData>) {
         let summ = self
             .0
             .get_mut(&name)

@@ -24,7 +24,7 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::{io, ptr, slice};
 
-use crate::digest::DigestData;
+use crate::digest::FastDigestData;
 use crate::errors::{Error, ErrorKind, Result};
 use crate::io::{InputFeatures, InputHandle, InputOrigin, IoProvider, OpenResult, OutputHandle};
 use crate::status::StatusBackend;
@@ -74,7 +74,7 @@ pub trait IoEventBackend {
     /// argument specifies the cryptographic digest of the data that were
     /// written. Note that this function takes ownership of the name and
     /// digest.
-    fn output_closed(&mut self, _name: OsString, _digest: DigestData) {}
+    fn output_closed(&mut self, _name: OsString, _digest: FastDigestData) {}
 
     /// This function is called when a file is opened for input.
     fn input_opened(&mut self, _name: &OsStr, _origin: InputOrigin) {}
@@ -91,7 +91,7 @@ pub trait IoEventBackend {
     /// read, if available. This digest is not always available, if the engine
     /// used seeks while reading the file. Note that this function takes
     /// ownership of the name and digest.
-    fn input_closed(&mut self, _name: OsString, _digest: Option<DigestData>) {}
+    fn input_closed(&mut self, _name: OsString, _digest: Option<FastDigestData>) {}
 }
 
 /// This struct implements the IoEventBackend trait but does nothing.

@@ -13,7 +13,7 @@ use std::path::Path;
 use std::str::FromStr;
 
 use crate::ctry;
-use crate::digest::{self, Digest, DigestData};
+use crate::digest::{self, Digest, DigestData, FastDigestData};
 use crate::errors::{Error, ErrorKind, Result};
 use crate::status::StatusBackend;
 
@@ -77,7 +77,7 @@ pub struct InputHandle {
     /// Indicates that the file cannot be written to (provided by a read-only IoProvider) and
     /// therefore it is useless to compute the digest.
     read_only: bool,
-    digest: digest::DigestComputer,
+    digest: digest::FastDigestComputer,
     origin: InputOrigin,
     ever_read: bool,
     did_unhandled_seek: bool,
@@ -139,11 +139,11 @@ impl InputHandle {
     /// return None if the stream was never read, which is another common
     /// TeX access pattern: files are opened, immediately closed, and then
     /// opened again. Finally, no digest is returned if the file is marked read-only.
-    pub fn into_name_digest(self) -> (OsString, Option<DigestData>) {
+    pub fn into_name_digest(self) -> (OsString, Option<FastDigestData>) {
         if self.did_unhandled_seek || !self.ever_read || self.read_only {
             (self.name, None)
         } else {
-            (self.name, Some(DigestData::from(self.digest)))
+            (self.name, Some(FastDigestData::from(self.digest)))
         }
     }
 
@@ -247,7 +247,7 @@ impl InputFeatures for InputHandle {
 pub struct OutputHandle {
     name: OsString,
     inner: Box<dyn Write>,
-    digest: digest::DigestComputer,
+    digest: digest::FastDigestComputer,
 }
 
 impl OutputHandle {
@@ -255,7 +255,7 @@ impl OutputHandle {
         OutputHandle {
             name: name.to_os_string(),
             inner: Box::new(inner),
-            digest: digest::create(),
+            digest: Default::default(),
         }
     }
 
@@ -271,8 +271,8 @@ impl OutputHandle {
 
     /// Consumes the object and returns the SHA256 sum of the content that was
     /// written.
-    pub fn into_name_digest(self) -> (OsString, DigestData) {
-        (self.name, DigestData::from(self.digest))
+    pub fn into_name_digest(self) -> (OsString, FastDigestData) {
+        (self.name, FastDigestData::from(self.digest))
     }
 }
 

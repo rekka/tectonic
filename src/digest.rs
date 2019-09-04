@@ -4,12 +4,13 @@
 
 //! Helpers to tidy up the computation of digests in various places.
 
-pub use sha2::Digest;
+pub use digest::Digest;
 pub use sha2::Sha256 as DigestComputer;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::string::ToString;
+pub use twox_hash::XxHash64 as FastDigestComputer;
 
 use crate::errors::{Error, ErrorKind, Result};
 
@@ -97,5 +98,40 @@ impl From<DigestComputer> for DigestData {
         let res = s.result();
         result.0.copy_from_slice(res.as_slice());
         result
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct FastDigestData([u8; 8]);
+
+impl FastDigestData {
+    pub fn of_nothing() -> FastDigestData {
+        let dc = FastDigestComputer::default();
+        Self::from(dc)
+    }
+}
+
+impl From<FastDigestComputer> for FastDigestData {
+    fn from(s: FastDigestComputer) -> FastDigestData {
+        let mut result = [0; 8];
+        let res = s.result();
+        result.copy_from_slice(res.as_slice());
+        FastDigestData(result)
+    }
+}
+
+impl ToString for FastDigestData {
+    fn to_string(&self) -> String {
+        bytes_to_hex(&self.0)
+    }
+}
+
+impl FromStr for FastDigestData {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let mut result = [0; 8];
+        hex_to_bytes(s, &mut result)?;
+        Ok(FastDigestData(result))
     }
 }

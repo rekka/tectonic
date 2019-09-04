@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 use std::ffi::{OsStr, OsString};
 use std::str::FromStr;
 
-use tectonic::digest::DigestData;
+use tectonic::digest::FastDigestData;
 use tectonic::engines::IoEventBackend;
 use tectonic::io::filesystem::{FilesystemIo, FilesystemPrimaryInputIo};
 use tectonic::io::{IoStack, MemoryIo};
@@ -34,7 +34,7 @@ const DEBUG: bool = false; // TODO: this is kind of ugly
 /// SHA256 sum.
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct FileSummary {
-    write_digest: Option<DigestData>,
+    write_digest: Option<FastDigestData>,
 }
 
 impl FileSummary {
@@ -57,7 +57,7 @@ impl IoEventBackend for FormatTestEvents {
         self.0.insert(name.to_os_string(), FileSummary::new());
     }
 
-    fn output_closed(&mut self, name: OsString, digest: DigestData) {
+    fn output_closed(&mut self, name: OsString, digest: FastDigestData) {
         let summ = self
             .0
             .get_mut(&name)
@@ -66,7 +66,7 @@ impl IoEventBackend for FormatTestEvents {
     }
 }
 
-fn test_format_generation(texname: &str, fmtname: &str, sha256: &str) {
+fn test_format_generation(texname: &str, fmtname: &str, digest_hex: &str) {
     util::set_test_root();
 
     let mut p = test_path(&["assets"]);
@@ -109,7 +109,7 @@ fn test_format_generation(texname: &str, fmtname: &str, sha256: &str) {
 
     // Did we get what we expected?
 
-    let want_digest = DigestData::from_str(sha256).unwrap();
+    let want_digest = FastDigestData::from_str(digest_hex).unwrap();
 
     for (name, info) in &events.0 {
         if name.to_string_lossy() == fmtname {
@@ -117,7 +117,7 @@ fn test_format_generation(texname: &str, fmtname: &str, sha256: &str) {
 
             if observed != want_digest {
                 println!(
-                    "expected {} to have SHA256 = {}",
+                    "expected {} to have digest_hex = {}",
                     fmtname,
                     want_digest.to_string()
                 );
@@ -132,9 +132,5 @@ fn test_format_generation(texname: &str, fmtname: &str, sha256: &str) {
 
 #[test]
 fn plain_format() {
-    test_format_generation(
-        "plain.tex",
-        "plain.fmt",
-        "83684a4992274fdae8de1b142146f85b0bf1a4f3489c54a04e12739d578dd863",
-    )
+    test_format_generation("plain.tex", "plain.fmt", "00326a01e2ee4df3")
 }
